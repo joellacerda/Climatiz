@@ -11,7 +11,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [.blue, .white],
+                colors: [.blue, .lightBlue],
                 startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
             
@@ -31,6 +31,16 @@ struct ContentView: View {
                     Text("27°")
                         .font(.system(size: 70, weight: .medium))
                         .foregroundStyle(.white)
+                }
+                .padding(.bottom, 40)
+                
+                HStack(spacing: 20) {
+                    NextDay(dayOfWeek: "QUA", imageName: "cloud.sun.fill", temperature: 29)
+                    NextDay(dayOfWeek: "QUI", imageName: "sun.max.fill", temperature: 30)
+                    NextDay(dayOfWeek: "SEX", imageName: "wind", temperature: 28)
+                    NextDay(dayOfWeek: "SAB", imageName: "cloud.fill", temperature: 29)
+                    NextDay(dayOfWeek: "DOM", imageName: "cloud.sun.fill", temperature: 27)
+                    
                 }
                 
                 Spacer()

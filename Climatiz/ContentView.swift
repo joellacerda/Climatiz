@@ -9,46 +9,82 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel = WeatherViewModel()
-    @State private var city: String = "Fortaleza"
+    @State private var searchCity: String = ""
     
     var body: some View {
-        ZStack {
-            BackgroundView(isNight: $viewModel.isNight)
-            
-            if viewModel.isLoading {
-                ProgressView("Fetching Weather...")
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .foregroundColor(.white)
-                    .scaleEffect(1.5)
-            } else if let weather = viewModel.currentWeatherData {
+        NavigationView {
+            ZStack {
+                BackgroundView(isNight: $viewModel.isNight)
+                
                 VStack {
-                    CityTextView(cityName: weather.name)
-                    
-                    MainWeatherView(imageName: viewModel.mainWeatherIcon, temperature: Int(weather.main.temp))
-                    
-                    HStack(spacing: 20) {
-                        ForEach(viewModel.forecastData) { day in
-                            NextDay(dayOfWeek: day.dayOfWeek,
-                                    imageName: day.iconName,
-                                    temperature: day.temperature)
+                    if viewModel.isLoading {
+                        ProgressView("Fetching Weather...")
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                        
+                        Spacer()
+                    } else if let weather = viewModel.currentWeatherData {
+                        CityTextView(cityName: weather.name)
+                        
+                        MainWeatherView(imageName: viewModel.mainWeatherIcon, temperature: Int(weather.main.temp))
+                        
+                        HStack(spacing: 20) {
+                            ForEach(viewModel.forecastData) { day in
+                                NextDay(dayOfWeek: day.dayOfWeek,
+                                        imageName: day.iconName,
+                                        temperature: day.temperature)
+                            }
                         }
+                        
+                        Spacer()
+                        
+                    } else if viewModel.locationManager.authorizationStatus == .denied {
+                        Spacer()
+                        
+                        Text("Please enable location services in Settings to see the weather for your area.")
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        
+                        Spacer()
+                    } else if let errorMessage = viewModel.errorMessage {
+                        Spacer()
+                        
+                        Text(errorMessage)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        
+                        Spacer()
+                    } else {
+                        Spacer()
+                        
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-            } else if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.white)
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-                    .padding()
+                .navigationTitle("Climatiz 🌦️")
+            }
+            .searchable(text: $searchCity, prompt: "Search for a city")
+            .onSubmit(of: .search) {
+                Task {
+                    await viewModel.fetchAllWeather(for: searchCity)
+                }
+            }
+            .task {
+                await viewModel.fetchInitialWeather()
+            }
+            .onChange(of: viewModel.locationManager.authorizationStatus) {
+                Task {
+                    await viewModel.fetchInitialWeather()
+                }
             }
         }
-        .onAppear {
-            Task {
-                await viewModel.fetchAllWeather(for: city)
-            }
-        }
+        .searchable(text: $searchCity, prompt: "Search for a city")
+        .foregroundColor(.white)
+        .tint(.white)
     }
 }
 

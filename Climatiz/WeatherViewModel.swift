@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import CoreLocation
 
 class WeatherViewModel: ObservableObject {
+    @Published var locationManager = LocationManager()
     @Published var currentWeatherData: CurrentWeatherData?
     @Published var forecastData: [DailyForecast] = []
     @Published var isLoading = false
@@ -20,24 +22,55 @@ class WeatherViewModel: ObservableObject {
         checkTimeOfDay()
     }
     
+    func fetchInitialWeather() async {
+        guard locationManager.authorizationStatus != .notDetermined else {
+            locationManager.requestLocation()
+            return
+        }
+        
+        if let location = locationManager.location {
+            await fetchAllWeather(for: location)
+        } else {
+            await fetchAllWeather(for: "New York")
+        }
+    }
+    
     func fetchAllWeather(for city: String) async {
+        guard !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            self.errorMessage = "Please enter a city name."
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
-        currentWeatherData = nil
-        forecastData = []
         
         do {
             async let current = weatherService.fetchCurrentWeather(for: city)
             async let forecast = weatherService.fetchForecast(for: city)
             
             self.currentWeatherData = try await current
-            let rawForecast = try await forecast
-            self.forecastData = processForecast(rawForecast)
+            self.forecastData = processForecast(try await forecast)
         } catch {
-            self.errorMessage = "Failed to fetch weather. Please try again."
-            print("Error fetching weather: \(error)")
+            self.errorMessage = "Could not find weather for \"\(city)\". Please check the spelling."
         }
 
+        isLoading = false
+    }
+    
+    func fetchAllWeather(for location: CLLocationCoordinate2D) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            async let current = weatherService.fetchCurrentWeather(for: location)
+            async let forecast = weatherService.fetchForecast(for: location)
+            
+            self.currentWeatherData = try await current
+            self.forecastData = processForecast(try await forecast)
+        } catch {
+            self.errorMessage = "Failed to fetch weather for your location."
+        }
+        
         isLoading = false
     }
     

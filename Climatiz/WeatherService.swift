@@ -5,7 +5,7 @@
 //  Created by Joel Lacerda on 07/08/25.
 //
 
-import Foundation
+import CoreLocation
 
 class WeatherService {
     private let apiKey = "ebc6f3228d00aeea368a82452e338515"
@@ -26,12 +26,26 @@ class WeatherService {
         return try await performRequest(url: url)
     }
     
+    func fetchCurrentWeather(for location: CLLocationCoordinate2D) async throws -> CurrentWeatherData {
+        guard let url = URL(string: "\(baseCurrentURL)?lat=\(location.latitude)&lon=\(location.longitude)&appid=\(apiKey)&units=metric") else {
+            throw APIError.invalidURL
+        }
+        return try await performRequest(url: url)
+    }
+    
     func fetchForecast(for city: String) async throws -> ForecastData {
         guard let url = URL(string: "\(baseForecastURL)?q=\(city)&appid=\(apiKey)&units=metric") else {
             throw APIError.invalidURL
         }
         return try await performRequest(url: url)
     }
+    
+    func fetchForecast(for location: CLLocationCoordinate2D) async throws -> ForecastData {
+            guard let url = URL(string: "\(baseForecastURL)?lat=\(location.latitude)&lon=\(location.longitude)&appid=\(apiKey)&units=metric") else {
+                throw APIError.invalidURL
+            }
+            return try await performRequest(url: url)
+        }
     
     private func performRequest<T: Decodable>(url: URL) async throws -> T {
         let (data, response) = try await URLSession.shared.data(from: url)

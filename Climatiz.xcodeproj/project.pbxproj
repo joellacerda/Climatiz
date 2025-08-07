@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3C0BAB392E451D5200E07DDE /* KeyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0BAB382E451D5200E07DDE /* KeyLoader.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		3C0BAB382E451D5200E07DDE /* KeyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyLoader.swift; sourceTree = "<group>"; };
 		3CBC030B2E4405570083F109 /* Climatiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Climatiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -32,6 +37,7 @@
 		3CBC03022E4405570083F109 = {
 			isa = PBXGroup;
 			children = (
+				3C0BAB382E451D5200E07DDE /* KeyLoader.swift */,
 				3CBC030D2E4405570083F109 /* Climatiz */,
 				3CBC030C2E4405570083F109 /* Products */,
 			);
@@ -119,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C0BAB392E451D5200E07DDE /* KeyLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

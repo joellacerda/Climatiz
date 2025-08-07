@@ -8,7 +8,7 @@
 import CoreLocation
 
 class WeatherService {
-    private let apiKey = "ebc6f3228d00aeea368a82452e338515"
+    private let apiKey = KeyLoader.getAPIKey()
     private let baseCurrentURL = "https://api.openweathermap.org/data/2.5/weather"
     private let baseForecastURL = "https://api.openweathermap.org/data/2.5/forecast"
     

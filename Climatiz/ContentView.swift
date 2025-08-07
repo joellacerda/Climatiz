@@ -8,34 +8,45 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isNight: Bool = false
+    @StateObject private var viewModel = WeatherViewModel()
+    @State private var city: String = "Fortaleza"
     
     var body: some View {
         ZStack {
-            BackgroundView(isNight: $isNight)
+            BackgroundView(isNight: $viewModel.isNight)
             
-            VStack {
-                CityTextView(cityName: "Fortaleza, CE")
-                
-                MainWeatherView(imageName: isNight ? "moon.stars.fill" : "cloud.sun.fill", temperature: 27)
-                
-                HStack(spacing: 20) {
-                    NextDay(dayOfWeek: "QUA", imageName: "cloud.sun.fill", temperature: 29)
-                    NextDay(dayOfWeek: "QUI", imageName: "sun.max.fill", temperature: 30)
-                    NextDay(dayOfWeek: "SEX", imageName: "wind", temperature: 28)
-                    NextDay(dayOfWeek: "SAB", imageName: "cloud.fill", temperature: 29)
-                    NextDay(dayOfWeek: "DOM", imageName: "cloud.sun.fill", temperature: 27)
+            if viewModel.isLoading {
+                ProgressView("Fetching Weather...")
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .foregroundColor(.white)
+                    .scaleEffect(1.5)
+            } else if let weather = viewModel.currentWeatherData {
+                VStack {
+                    CityTextView(cityName: weather.name)
+                    
+                    MainWeatherView(imageName: viewModel.mainWeatherIcon, temperature: Int(weather.main.temp))
+                    
+                    HStack(spacing: 20) {
+                        ForEach(viewModel.forecastData) { day in
+                            NextDay(dayOfWeek: day.dayOfWeek,
+                                    imageName: day.iconName,
+                                    temperature: day.temperature)
+                        }
+                    }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
-                
-                Button {
-                    isNight.toggle()
-                } label: {
-                    WeatherButton(title: "Mudar Cores", backgroundColor: .white, textColor: .blue)
-                }
-                
-                Spacer()
+            } else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+        }
+        .onAppear {
+            Task {
+                await viewModel.fetchAllWeather(for: city)
             }
         }
     }
@@ -45,17 +56,12 @@ struct ContentView: View {
     ContentView()
 }
 
-extension View {
-    func cornerRadius(_ radius: Double) -> some View {
-        clipShape(.rect(cornerRadius: radius))
-    }
-}
 
 struct CityTextView: View {
     var cityName: String
     
     var body: some View {
-        Text("Fortaleza, CE")
+        Text(cityName)
             .font(.system(size: 32, weight: .medium))
             .foregroundStyle(.white)
             .padding()
@@ -78,8 +84,28 @@ struct MainWeatherView: View {
                 .font(.system(size: 70, weight: .medium))
                 .foregroundStyle(.white)
         }
-        .padding(.bottom, 40)
+        .padding(.vertical, 40)
     }
 }
 
+func getWeatherIcon(for conditionId: Int, isNight: Bool = false) -> String {
+    switch conditionId {
+    case 200...232:
+        return "cloud.bolt.rain.fill"
+    case 300...321:
+        return "cloud.drizzle.fill"
+    case 500...531:
+        return "cloud.rain.fill"
+    case 600...622:
+        return "cloud.snow.fill"
+    case 701...781:
+        return "sun.haze.fill"
+    case 800:
+        return isNight ? "moon.stars.fill" : "sun.max.fill"
+    case 801...804:
+        return isNight ? "cloud.moon.fill" : "cloud.sun.fill"
+    default:
+        return "questionmark.diamond.fill"
+    }
+}
 
